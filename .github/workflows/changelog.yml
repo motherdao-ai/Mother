@@ -15,7 +15,7 @@ jobs:
           fetch-depth: 0
           ref: main
 
-      - name: Generate Changelog
+      - name: Generate History
         run: |
           # Function to generate changelog with common options
           generate_changelog() {
@@ -47,11 +47,11 @@ jobs:
               --enhancement-labels feature,enhancement \
               --bug-labels bug,fix \
               --exclude-tags-regex "^v0\\..*$" \
-              --output CHANGELOG.md
+              --output HISTORY.md
           }
 
-          # Check if CHANGELOG.md exists and is not empty
-          if [ ! -f CHANGELOG.md ] || [ ! -s CHANGELOG.md ]; then
+          # Check if HISTORY.md exists and is not empty
+          if [ ! -f HISTORY.md ] || [ ! -s HISTORY.md ]; then
             echo "Generating full changelog history..."
             generate_changelog "" ${{ github.event.release.tag_name }}
           else
@@ -72,6 +72,6 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add CHANGELOG.md
+          git add HISTORY.md
           git commit -m "docs: update changelog for ${{ github.event.release.tag_name }}"
           git push origin HEAD:main
