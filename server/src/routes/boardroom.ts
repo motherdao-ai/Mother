@@ -14,20 +14,18 @@ router.get("/protocols/:protocolId/proposals", async (req, res) => {
   }
 });
 
-router.get("/protocols/:protocolId/proposals/:proposalId", async (req, res) => {
+router.get("/proposals/:proposalId", async (req, res) => {
   try {
-    const { protocolId, proposalId } = req.params;
-    const proposalDetails = await boardroomService.fetchProposalDetails(
-      protocolId,
-      proposalId
-    );
+    const { proposalId } = req.params;
+    const proposalDetails =
+      await boardroomService.fetchProposalDetails(proposalId);
     res.json(proposalDetails);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-router.get("/discussions/:protocolId/topics", async (req, res) => {
+router.get("/discussions/:protocolId", async (req, res) => {
   try {
     const { protocolId } = req.params;
     const topics = await boardroomService.fetchDiscourseTopics(protocolId);

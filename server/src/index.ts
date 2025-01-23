@@ -68,17 +68,23 @@ app.use((req: Request, res: Response) => {
   });
 });
 
-app.use((err: AnyType, req: Request, res: Response, next: NextFunction) => {
-  if (isHttpError(err)) {
-    res.status(err.statusCode).json({
-      message: err.message,
+app.use((_req: Request, _res: Response, _next: NextFunction) => {
+  _res.status(404).json({
+    message: `Route ${_req.method} ${_req.url} not found`,
+  });
+});
+
+app.use((_err: AnyType, _req: Request, _res: Response, _next: NextFunction) => {
+  if (isHttpError(_err)) {
+    _res.status(_err.statusCode).json({
+      message: _err.message,
     });
-  } else if (err instanceof Error) {
-    res.status(500).json({
-      message: `Internal Server Error: ${err.message}`,
+  } else if (_err instanceof Error) {
+    _res.status(500).json({
+      message: `Internal Server Error: ${_err.message}`,
     });
   } else {
-    res.status(500).json({
+    _res.status(500).json({
       message: `Internal Server Error`,
     });
   }
