@@ -1,5 +1,3 @@
-import fetch from "node-fetch";
-
 interface Proposal {
   id: string;
   title: string;
@@ -23,12 +21,14 @@ export default class BoardroomService {
     this.apiKey = process.env.BOARDROOM_API_KEY || "";
   }
 
-  private async makeRequest<T>(endpoint: string): Promise<T> {
-    const response = await fetch(`${this.apiUrl}/${endpoint}`, {
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-      },
-    });
+  private async makeRequest<T>(
+    endpoint: string,
+    hasParams: boolean = false
+  ): Promise<T> {
+    const separator = hasParams ? "&" : "?";
+    const response = await fetch(
+      `${this.apiUrl}/${endpoint}${separator}key=${this.apiKey}`
+    );
     if (!response.ok) {
       throw new Error(`Boardroom API error: ${response.statusText}`);
     }
@@ -40,23 +40,19 @@ export default class BoardroomService {
   }
 
   public async fetchProposals(protocolId: string): Promise<Proposal[]> {
-    return this.makeRequest<Proposal[]>(`protocols/${protocolId}/proposals`);
+    return this.makeRequest<Proposal[]>(`/protocols/${protocolId}/proposals`);
   }
 
-  public async fetchProposalDetails(
-    protocolId: string,
-    proposalId: string
-  ): Promise<Proposal> {
-    return this.makeRequest<Proposal>(
-      `protocols/${protocolId}/proposals/${proposalId}`
-    );
+  public async fetchProposalDetails(proposalId: string): Promise<Proposal> {
+    return this.makeRequest<Proposal>(`/proposals/${proposalId}`);
   }
 
   public async fetchDiscourseTopics(
     protocolId: string
   ): Promise<DiscussionTopic[]> {
     return this.makeRequest<DiscussionTopic[]>(
-      `discussions/${protocolId}/topics`
+      `/discourseTopicPosts?protocol=${protocolId}`,
+      true // indicate this endpoint already has query params
     );
   }
 }
