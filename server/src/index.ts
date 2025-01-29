@@ -14,7 +14,8 @@ import cookieParser from "cookie-parser";
 import githubRouter from "./routes/github.js";
 import { AnyType } from "./utils.js";
 import { isHttpError } from "http-errors";
-import { TwitterService } from "./services/twitter.service.js";
+import { TwitterService as Twitter } from "./services/twitter.service.js";
+import { DiscordService } from "./services/discord.service.js";
 
 // Convert ESM module URL to filesystem path
 const __filename = fileURLToPath(import.meta.url);
@@ -57,6 +58,10 @@ app.use("/auth/discord", discordRouter);
 // Mount GitHub OAuth routes
 app.use("/auth/github", githubRouter);
 
+// Initialize Discord bot service
+const discordService = DiscordService.getInstance();
+services.push(discordService);
+
 // 404 handler
 app.use((_req: Request, _res: Response, _next: NextFunction) => {
   _res.status(404).json({
@@ -94,7 +99,7 @@ app.listen(port, async () => {
     const ngrokUrl = ngrokService.getUrl()!;
     console.log("NGROK URL:", ngrokUrl);
 
-    const twitterInstance = TwitterService.getInstance();
+    const twitterInstance = Twitter.getInstance();
     await twitterInstance.start();
     const me = await twitterInstance.me;
     services.push(twitterInstance);
@@ -110,6 +115,11 @@ app.listen(port, async () => {
 
     const botInfo = await telegramService.getBotInfo();
     console.log("Telegram Bot URL:", `https://t.me/${botInfo.username}`);
+
+    // Start Discord service
+    console.log("Starting Discord service...");
+    await discordService.start();
+    console.log("Discord service started");
   } catch (e) {
     console.error("Failed to start server:", e);
     process.exit(1);
