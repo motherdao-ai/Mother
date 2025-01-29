@@ -1,14 +1,61 @@
 interface Proposal {
+  refId: string;
   id: string;
   title: string;
   content: string;
-  // ...add other proposal properties as needed
+  protocol: string;
+  adapter: string;
+  proposer: string;
+  totalVotes: number;
+  blockNumber: number;
+  startTime: { blockNumber: number };
+  endTime: { blockNumber: number };
+  startTimestamp: string;
+  endTimestamp: string;
+  currentState: string;
+  choices: string[];
+  results: Array<{ total: number; choice: number }>;
+  events: Array<{
+    time: { blockNumber: number };
+    event: string;
+    timestamp: number;
+    txHash: string;
+  }>;
+}
+
+interface ProposalsResponse {
+  data: Proposal[];
+  nextCursor: string;
+}
+
+interface ProposalDetailsResponse {
+  data: Proposal;
 }
 
 interface DiscussionTopic {
   id: string;
-  title: string;
-  // ...add other discussion topic properties as needed
+  refId: string;
+  protocol: string;
+  body: string;
+  authorName: string;
+  authorUsername: string;
+  authorAvatar: string;
+  topicId: number;
+  authorId: number;
+  reads: number;
+  readersCount: number;
+  likeCount: number;
+  quoteCount: number;
+  replyCount: number;
+  replyToPostNumber: number | null;
+  postNumber: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface DiscussionTopicResponse {
+  data: DiscussionTopic[];
+  nextCursor: string;
 }
 
 export default class BoardroomService {
@@ -39,18 +86,26 @@ export default class BoardroomService {
     }
   }
 
-  public async fetchProposals(protocolId: string): Promise<Proposal[]> {
-    return this.makeRequest<Proposal[]>(`/protocols/${protocolId}/proposals`);
+  public async fetchProposals(
+    protocolId: string
+  ): Promise<ProposalsResponse[]> {
+    return this.makeRequest<ProposalsResponse[]>(
+      `/protocols/${protocolId}/proposals`
+    );
   }
 
-  public async fetchProposalDetails(proposalId: string): Promise<Proposal> {
-    return this.makeRequest<Proposal>(`/proposals/${proposalId}`);
+  public async fetchProposalDetails(
+    proposalId: string
+  ): Promise<ProposalDetailsResponse> {
+    return this.makeRequest<ProposalDetailsResponse>(
+      `/proposals/${proposalId}`
+    );
   }
 
   public async fetchDiscourseTopics(
     protocolId: string
-  ): Promise<DiscussionTopic[]> {
-    return this.makeRequest<DiscussionTopic[]>(
+  ): Promise<DiscussionTopicResponse> {
+    return this.makeRequest<DiscussionTopicResponse>(
       `/discourseTopicPosts?protocol=${protocolId}`,
       true // indicate this endpoint already has query params
     );
