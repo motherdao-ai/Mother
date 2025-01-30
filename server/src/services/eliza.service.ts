@@ -181,8 +181,16 @@ export class ElizaService extends BaseService {
           goalsData: [],
           knowledge: "",
           knowledgeData: [],
+          examples:
+            this.runtime.character.messageExamples
+              ?.map((conversation) =>
+                conversation
+                  .map((msg) => `${msg.user}: ${msg.content.text}`)
+                  .join("\n")
+              )
+              .join("\n\n") || "",
         },
-        template,
+        template: `${this.runtime.character.system}\n\nExamples of my responses:\n{{examples}}\n\nCurrent message: {{currentPost}}. Respond:`,
       });
       console.log("Generated context:", context);
 
