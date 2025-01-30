@@ -82,54 +82,6 @@ export class DiscordService extends BaseService {
     }
   }
 
-  private async testGaianetConnection(): Promise<void> {
-    try {
-      console.log("Testing GAIANET connection from Discord service...");
-
-      // Get GAIANET configuration
-      const serverUrl = process.env.GAIANET_SERVER_URL;
-      const model = process.env.GAIANET_MODEL;
-
-      if (!serverUrl || !model) {
-        throw new Error("GAIANET_SERVER_URL and GAIANET_MODEL are required");
-      }
-
-      const completionsUrl = `${serverUrl}/completions`;
-      console.log("GAIANET config:", {
-        serverUrl: completionsUrl,
-        model,
-      });
-
-      const response = await fetch(completionsUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model,
-          prompt: "Hello, world!",
-          max_tokens: 50,
-        }),
-      });
-
-      console.log(
-        "GAIANET test response status from Discord:",
-        response.status
-      );
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`GAIANET test from Discord failed: ${error}`);
-      }
-
-      const data = await response.json();
-      console.log("GAIANET test from Discord successful:", data);
-    } catch (error) {
-      console.error("GAIANET connection test from Discord failed:", error);
-      throw error;
-    }
-  }
-
   private setupEventHandlers(): void {
     // Handle ready event
     this.client.once(Events.ClientReady, () => {
@@ -276,12 +228,6 @@ export class DiscordService extends BaseService {
       if (!process.env.DISCORD_BOT_TOKEN) {
         throw new Error("DISCORD_BOT_TOKEN is required");
       }
-
-      // Test GAIANET connection first
-      console.log(
-        "Testing GAIANET connection before starting Discord service..."
-      );
-      await this.testGaianetConnection();
 
       // Set up Discord token
       this.rest.setToken(process.env.DISCORD_BOT_TOKEN);

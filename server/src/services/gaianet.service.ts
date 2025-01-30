@@ -11,7 +11,18 @@ interface TextResponse {
 }
 
 interface GaiaNetResponse {
-  choices: Array<{ text: string }>;
+  id: string;
+  choices: Array<{
+    finish_reason: string;
+    index: number;
+    message: {
+      role: string;
+      content: string;
+    };
+  }>;
+  created: number;
+  model: string;
+  object: string;
   usage?: {
     prompt_tokens: number;
     completion_tokens: number;
@@ -70,31 +81,41 @@ export class GaianetService extends BaseService implements Service {
   // Text generation method
   public async generateText(prompt: string): Promise<TextResponse> {
     try {
-      const response = await fetch(`${this.serverUrl}/completions`, {
+      const response = await fetch(`${this.serverUrl}/chat/completions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           model: process.env.GAIANET_MODEL,
-          prompt,
+          messages: [{ role: "user", content: prompt }],
           max_tokens: 500,
         }),
       });
 
       if (!response.ok) {
         const error = await response.text();
-        throw new Error(`GAIANET API error: ${error}`);
+        throw new Error(`GAIANET API error: ${response.status} ${error}`);
       }
 
       const rawData = await response.json();
       const data = rawData as GaiaNetResponse;
 
-      if (!data?.choices?.[0]?.text) {
-        throw new Error("Invalid response format from GAIANET");
+      if (!data?.choices?.[0]?.message?.content) {
+        throw new Error(
+          `GAIANET returned empty response (finish_reason: ${data?.choices?.[0]?.finish_reason})`
+        );
       }
 
-      const cleanedText = this.cleanResponse(data.choices[0].text);
+      const text = data.choices[0].message.content;
+      const cleanedText = this.cleanResponse(text);
+
+      // If we got an empty response after cleaning, try to provide more context in the error
+      if (!cleanedText) {
+        throw new Error(
+          `GAIANET returned empty response after cleaning (finish_reason: ${data.choices[0].finish_reason})`
+        );
+      }
 
       return {
         text: cleanedText,
@@ -114,9 +135,10 @@ export class GaianetService extends BaseService implements Service {
     try {
       console.log("Testing GAIANET connection...");
 
-      const testUrl = `${this.serverUrl}/completions`;
+      const testUrl = `${this.serverUrl}/chat/completions`;
       console.log("GAIANET config:", {
         serverUrl: testUrl,
+        model: process.env.GAIANET_MODEL,
       });
 
       const response = await fetch(testUrl, {
@@ -126,8 +148,9 @@ export class GaianetService extends BaseService implements Service {
         },
         body: JSON.stringify({
           model: process.env.GAIANET_MODEL,
-          prompt: "Hello, world!",
+          messages: [{ role: "user", content: "Say 'hello' in one word:" }],
           max_tokens: 50,
+          temperature: 0.1, // Lower temperature for more deterministic response
         }),
       });
 
@@ -138,6 +161,20 @@ export class GaianetService extends BaseService implements Service {
 
       const rawData = await response.json();
       const data = rawData as GaiaNetResponse;
+
+      if (!data?.choices?.[0]?.message?.content) {
+        throw new Error(
+          "GAIANET test failed: Invalid response format - missing choices"
+        );
+      }
+
+      const choice = data.choices[0];
+      if (!choice.message.content) {
+        throw new Error(
+          `GAIANET test failed: Empty response (finish_reason: ${choice.finish_reason})`
+        );
+      }
+
       console.log("GAIANET test successful:", data);
     } catch (error) {
       console.error("GAIANET test failed:", error);
