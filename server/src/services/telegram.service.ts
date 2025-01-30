@@ -32,7 +32,7 @@ export class TelegramService extends BaseService {
       this.webhookUrl = `${webhookUrl}/telegram/webhook`;
     }
     this.bot = new Bot(process.env.TELEGRAM_BOT_TOKEN);
-    this.elizaService = ElizaService.getInstance(this.bot);
+    this.elizaService = ElizaService.getInstance();
   }
 
   public static getInstance(webhookUrl?: string): TelegramService {
